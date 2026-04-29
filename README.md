@@ -70,14 +70,14 @@ Comportamento dos cargos e limites está em `src/hierarquia/config/`.
 
 ## CI (GitHub Actions)
 
-No repositório existe o workflow `.github/workflows/ci.yml`. Em cada push ou pull request para `main` ou `master`, o GitHub executa `npm ci` e `npm run build` para garantir que o projeto compila.
+No repositório existe o workflow `.github/workflows/ci.yml`. Em cada push ou pull request para `main` ou `master`, o GitHub corre `npm ci` (que compila via `postinstall`) e verifica se existe `dist/index.js`.
 
 ## Deploy (Vertra Cloud)
 
 Ficheiros na raiz:
 
 - **`vertracloud.config`** — `MAIN=dist/index.js`, `START=npm start`, Node recomendado, RAM e nome da app.
-- **`package.json`** — `postinstall` corre `npm run build`, assim o **`dist/`** é criado no servidor ao instalar dependências (não precisas commitar `dist/`).
+- **`package.json`** — `postinstall` corre `npm run build` no deploy. A pasta **`dist/`** está no Git para o seletor de ficheiros (ex. Vertra) e o GitHub mostrarem **`dist/index.js`**. Depois de alterares `src/`, corre `npm run build` e inclui o `dist` no commit para não ficar desatualizado.
 
 Passos:
 

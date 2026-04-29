@@ -1,0 +1,37 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ROLE_LIMITS = exports.HIERARCHY_HEADER = exports.ADMIN_ROLES = exports.HIERARCHY = exports.ROLES = void 0;
+exports.ROLES = {
+    COMANDO_GRAER: "1497018722639020132",
+    ADMINISTRACAO_GRAER: "1497018722639020132",
+    PRE_GRAER_A: "1475125903007809566",
+    PRE_GRAER_B: "1475126057169457365",
+    PRE_GRAER_C: "1493039672660594708",
+    PRE_GRAER_D: "1480721031378239679",
+    PILOTO_GRAER: "1475126061250515094",
+    CURSO_BREVE_GRAER: "1492991836304703621",
+    CURSO_ATIRADO_GRAER: "1492991257276977266"
+};
+exports.HIERARCHY = [
+    exports.ROLES.CURSO_ATIRADO_GRAER,
+    exports.ROLES.CURSO_BREVE_GRAER,
+    exports.ROLES.PILOTO_GRAER,
+    exports.ROLES.PRE_GRAER_D,
+    exports.ROLES.PRE_GRAER_C,
+    exports.ROLES.PRE_GRAER_B,
+    exports.ROLES.PRE_GRAER_A
+];
+exports.ADMIN_ROLES = [
+    exports.ROLES.ADMINISTRACAO_GRAER,
+    exports.ROLES.COMANDO_GRAER
+];
+exports.HIERARCHY_HEADER = "# Hierarquia GRAER";
+exports.ROLE_LIMITS = {
+    [exports.ROLES.PRE_GRAER_A]: 99,
+    [exports.ROLES.PRE_GRAER_B]: 99,
+    [exports.ROLES.PRE_GRAER_C]: 99,
+    [exports.ROLES.PRE_GRAER_D]: 99,
+    [exports.ROLES.PILOTO_GRAER]: 99,
+    [exports.ROLES.CURSO_BREVE_GRAER]: 99,
+    [exports.ROLES.CURSO_ATIRADO_GRAER]: 99
+};
