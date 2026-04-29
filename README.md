@@ -72,6 +72,22 @@ Comportamento dos cargos e limites está em `src/hierarquia/config/`.
 
 No repositório existe o workflow `.github/workflows/ci.yml`. Em cada push ou pull request para `main` ou `master`, o GitHub executa `npm ci` e `npm run build` para garantir que o projeto compila.
 
+## Deploy (Vertra Cloud)
+
+Ficheiros na raiz:
+
+- **`vertracloud.config`** — `MAIN=dist/index.js`, `START=npm start`, Node recomendado, RAM e nome da app.
+- **`package.json`** — `postinstall` corre `npm run build`, assim o **`dist/`** é criado no servidor ao instalar dependências (não precisas commitar `dist/`).
+
+Passos:
+
+1. No painel da **Vertra Cloud**, define as variáveis de ambiente (iguais ao `.env`): `DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`, opcionalmente `TEXT_CHANNEL_ID` e `ALLOWED_USER_IDS`.
+2. Deploy por **GitHub** ou **ZIP**. Não incluas `node_modules` no ZIP.
+3. **Arquivo principal:** **`dist/index.js`** (ou confia no `vertracloud.config`).
+4. Na primeira vez ou após mudares comandos slash, corre **`npm run register`** na tua máquina (com o mesmo `.env`) para registar os comandos na guild.
+
+Este bot **não** abre servidor HTTP; ignora avisos genéricos sobre `PORT` típicos de tutoriais web. Se o container reiniciar em loop, vê os logs no painel (token inválido ou falta de variável são causas comuns).
+
 ## Dados locais
 
 O ficheiro `data/hierarchy-messages.json` (criado em runtime) guarda os IDs das mensagens da lista por canal. A pasta `data/` está no `.gitignore` e não deve ser commitada.

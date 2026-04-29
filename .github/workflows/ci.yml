@@ -17,8 +17,8 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias e compilar
         run: npm ci
 
-      - name: Build TypeScript
-        run: npm run build
+      - name: Verificar saida do build
+        run: test -f dist/index.js
