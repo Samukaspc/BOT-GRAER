@@ -88,6 +88,20 @@ Passos:
 
 Este bot **não** abre servidor HTTP; ignora avisos genéricos sobre `PORT` típicos de tutoriais web. Se o container reiniciar em loop, vê os logs no painel (token inválido ou falta de variável são causas comuns).
 
+## Deploy (Discloud)
+
+Ficheiros na raiz:
+
+- **`discloud.config`** — `TYPE=bot`, `MAIN=dist/index.js`, `START=npm start`, `BUILD=npm run build`, `RAM=512`, `VERSION=22`.
+- **`.discloudignore`** — exclui ficheiros e pastas que não devem ir no upload.
+
+Passos:
+
+1. No painel da **Discloud**, configura as variáveis de ambiente: `DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`, opcionalmente `TEXT_CHANNEL_ID` e `ALLOWED_USER_IDS`.
+2. Faz upload do projeto (ZIP ou Git, conforme plano).
+3. Mantém o arquivo principal como **`dist/index.js`** usando o `discloud.config`.
+4. Na primeira vez, ou quando mudares os slash commands, corre **`npm run register`** localmente.
+
 ## Dados locais
 
 O ficheiro `data/hierarchy-messages.json` (criado em runtime) guarda os IDs das mensagens da lista por canal. A pasta `data/` está no `.gitignore` e não deve ser commitada.
