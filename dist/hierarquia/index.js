@@ -45,6 +45,12 @@ async function fetchTodosMembros({ servidor }) {
 function formatarVagas({ atual, maximo }) {
     return `${String(atual).padStart(2, "0")}/${String(maximo).padStart(2, "0")}`;
 }
+function membroSoEstagiarioSemCargoHierarquia(membro) {
+    if (!membro.roles.cache.has(config_1.ROLES.ESTAGIARIO)) {
+        return false;
+    }
+    return !config_1.HIERARCHY.some((roleId) => membro.roles.cache.has(roleId));
+}
 function hasAdminPermission({ membro, idsUsuariosPermitidos }) {
     if (idsUsuariosPermitidos.includes(membro.id)) {
         return true;
@@ -97,6 +103,27 @@ async function buildHierarchyLines({ servidor }) {
             }
         }
         lines.push("");
+        if (roleId === config_1.ROLES.CURSO_ATIRADO_GRAER) {
+            const estagiarios = [...members.values()]
+                .filter((m) => !m.user.bot && membroSoEstagiarioSemCargoHierarquia(m))
+                .sort((a, b) => a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" }));
+            const maxEst = config_1.ROLE_LIMITS[config_1.ROLES.ESTAGIARIO] ?? 99;
+            const vagasEst = formatarVagas({
+                atual: estagiarios.length,
+                maximo: maxEst
+            });
+            lines.push(`# <@&${config_1.ROLES.ESTAGIARIO}> (${vagasEst})`);
+            lines.push("");
+            if (estagiarios.length === 0) {
+                lines.push("_Nenhum membro neste nível._");
+            }
+            else {
+                for (const membro of estagiarios) {
+                    lines.push(`<@${membro.id}>`);
+                }
+            }
+            lines.push("");
+        }
     }
     const dataAtual = new Date().toLocaleDateString("pt-BR", {
         day: "2-digit",

@@ -61,6 +61,13 @@ function formatarVagas({ atual, maximo }: ParametrosFormatarVagas): string {
   return `${String(atual).padStart(2, "0")}/${String(maximo).padStart(2, "0")}`;
 }
 
+function membroSoEstagiarioSemCargoHierarquia(membro: GuildMember): boolean {
+  if (!membro.roles.cache.has(ROLES.ESTAGIARIO)) {
+    return false;
+  }
+  return !HIERARCHY.some((roleId) => membro.roles.cache.has(roleId));
+}
+
 export function hasAdminPermission({
   membro,
   idsUsuariosPermitidos
@@ -131,6 +138,35 @@ export async function buildHierarchyLines({
     }
 
     lines.push("");
+
+    if (roleId === ROLES.CURSO_ATIRADO_GRAER) {
+      const estagiarios = [...members.values()]
+        .filter(
+          (m) => !m.user.bot && membroSoEstagiarioSemCargoHierarquia(m)
+        )
+        .sort((a, b) =>
+          a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" })
+        );
+
+      const maxEst = ROLE_LIMITS[ROLES.ESTAGIARIO] ?? 99;
+      const vagasEst = formatarVagas({
+        atual: estagiarios.length,
+        maximo: maxEst
+      });
+
+      lines.push(`# <@&${ROLES.ESTAGIARIO}> (${vagasEst})`);
+      lines.push("");
+
+      if (estagiarios.length === 0) {
+        lines.push("_Nenhum membro neste nível._");
+      } else {
+        for (const membro of estagiarios) {
+          lines.push(`<@${membro.id}>`);
+        }
+      }
+
+      lines.push("");
+    }
   }
 
   const dataAtual = new Date().toLocaleDateString("pt-BR", {
