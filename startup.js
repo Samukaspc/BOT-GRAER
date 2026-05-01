@@ -5,22 +5,31 @@ const { spawnSync } = require("child_process");
 const distMain = path.join(__dirname, "dist", "index.js");
 
 if (!fs.existsSync(distMain)) {
-  const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
-  const resultado = spawnSync(npmCmd, ["run", "build"], {
+  let ok = false;
+  const bunRes = spawnSync("bun", ["run", "build"], {
     cwd: __dirname,
     stdio: "inherit",
     env: process.env
   });
-  if (resultado.error) {
-    throw resultado.error;
+  if (!bunRes.error && bunRes.status === 0) {
+    ok = true;
   }
-  if (resultado.status !== 0) {
-    process.exit(resultado.status ?? 1);
+  if (!ok) {
+    const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+    const npmRes = spawnSync(npmCmd, ["run", "build"], {
+      cwd: __dirname,
+      stdio: "inherit",
+      env: process.env
+    });
+    if (!npmRes.error && npmRes.status === 0) {
+      ok = true;
+    }
   }
-}
-
-if (!fs.existsSync(distMain)) {
-  throw new Error(`Compilacao nao gerou: ${distMain}`);
+  if (!fs.existsSync(distMain)) {
+    throw new Error(
+      `Nao foi possivel gerar dist/index.js. No painel use instalacao: bun install (ou npm install). Depois teste: bun run build`
+    );
+  }
 }
 
 require(distMain);
