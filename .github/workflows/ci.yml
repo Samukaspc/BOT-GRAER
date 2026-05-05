@@ -17,6 +17,9 @@ jobs:
           node-version: "22"
           cache: npm
 
+      - name: Verificar pasta src para deploy
+        run: npm run verify:deploy
+
       - name: Instalar dependencias e compilar
         run: npm ci
 

@@ -102,6 +102,16 @@ Passos:
 3. Mantém o arquivo principal como **`dist/index.js`** usando o `discloud.config`.
 4. Na primeira vez, ou quando mudares os slash commands, corre **`npm run register`** localmente.
 
+## Deploy (HidenCloud)
+
+- O servidor precisa da pasta **`src/`** completa no container (erro **TS18003** = `src` em falta ou vazio no deploy por Git/ZIP incompleto).
+- Instalação recomendada na raiz do projeto: **`bun install`** (gera `node_modules` e corre `postinstall`, que compila com Node ou Bun conforme o ambiente).
+- Comando de arranque típico: **`/usr/bin/env bun /home/container/startup.js`**.
+- Antes de enviares o projeto, podes correr **`npm run verify:deploy`** para confirmar que existe pelo menos um `.ts` em `src/`.
+- Arranque direto sem passar pelo `startup.js` (só com **`src/`** e deps instaladas): **`npm run start:direct`** ou **`bun src/index.ts`**.
+- Se precisares de compilar sem Bun na PATH localmente: **`npm run build:node`**.
+- Último recurso sem compilar no servidor: faz **`npm run build:node`**, commita **`dist/`**, e garante que o arranque usa apenas `dist/index.js` (o `startup.js` já usa `dist/` quando existe).
+
 ## Dados locais
 
 O ficheiro `data/hierarchy-messages.json` (criado em runtime) guarda os IDs das mensagens da lista por canal. A pasta `data/` está no `.gitignore` e não deve ser commitada.

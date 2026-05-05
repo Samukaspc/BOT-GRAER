@@ -4,6 +4,10 @@ exports.hasAdminPermission = hasAdminPermission;
 exports.buildHierarchyLines = buildHierarchyLines;
 const util_1 = require("@discordjs/util");
 const config_1 = require("./config");
+const TAG_CURSO_MAP = "1494040288988106752";
+const MENCAO_CURSO_MAP = `<@&${TAG_CURSO_MAP}>`;
+const ICONE_SEM_CURSO_MAP = "❌";
+const NOME_CURSO_MAP = "CURSO M.A.A.P";
 function msAposRateLimitMembros(erro) {
     if (typeof erro === "object" && erro !== null && "data" in erro) {
         const dados = erro.data;
@@ -44,12 +48,6 @@ async function fetchTodosMembros({ servidor }) {
 }
 function formatarVagas({ atual, maximo }) {
     return `${String(atual).padStart(2, "0")}/${String(maximo).padStart(2, "0")}`;
-}
-function membroSoEstagiarioSemCargoHierarquia(membro) {
-    if (!membro.roles.cache.has(config_1.ROLES.ESTAGIARIO)) {
-        return false;
-    }
-    return !config_1.HIERARCHY.some((roleId) => membro.roles.cache.has(roleId));
 }
 function hasAdminPermission({ membro, idsUsuariosPermitidos }) {
     if (idsUsuariosPermitidos.includes(membro.id)) {
@@ -99,13 +97,15 @@ async function buildHierarchyLines({ servidor }) {
         }
         else {
             for (const membro of grupo) {
-                lines.push(`<@${membro.id}>`);
+                const semTagCursoMap = !membro.roles.cache.has(TAG_CURSO_MAP);
+                const sufixoTag = semTagCursoMap ? ` ${ICONE_SEM_CURSO_MAP}` : "";
+                lines.push(`<@${membro.id}> | ${membro.displayName}${sufixoTag}`);
             }
         }
         lines.push("");
         if (roleId === config_1.ROLES.CURSO_ATIRADO_GRAER) {
             const estagiarios = [...members.values()]
-                .filter((m) => !m.user.bot && membroSoEstagiarioSemCargoHierarquia(m))
+                .filter((m) => !m.user.bot && m.roles.cache.has(config_1.ROLES.ESTAGIARIO))
                 .sort((a, b) => a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" }));
             const maxEst = config_1.ROLE_LIMITS[config_1.ROLES.ESTAGIARIO] ?? 99;
             const vagasEst = formatarVagas({
@@ -119,12 +119,16 @@ async function buildHierarchyLines({ servidor }) {
             }
             else {
                 for (const membro of estagiarios) {
-                    lines.push(`<@${membro.id}>`);
+                    const semTagCursoMap = !membro.roles.cache.has(TAG_CURSO_MAP);
+                    const sufixoTag = semTagCursoMap ? ` ${ICONE_SEM_CURSO_MAP}` : "";
+                    lines.push(`<@${membro.id}> | ${membro.displayName}${sufixoTag}`);
                 }
             }
             lines.push("");
         }
     }
+    lines.push(`Membros com ${ICONE_SEM_CURSO_MAP} na hierarquia não possuem a tag do ${NOME_CURSO_MAP} (${MENCAO_CURSO_MAP}).`);
+    lines.push("");
     const dataAtual = new Date().toLocaleDateString("pt-BR", {
         day: "2-digit",
         month: "2-digit"
