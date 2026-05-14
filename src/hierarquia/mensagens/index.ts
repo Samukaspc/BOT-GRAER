@@ -85,6 +85,21 @@ export async function publicarOuEditarLista({
     }
   }
 
+  for (
+    let indice = partes.length;
+    indice < idsAntigos.length;
+    indice += 1
+  ) {
+    const idAntigo = idsAntigos[indice];
+    try {
+      const mensagem = await canal.messages.fetch(idAntigo);
+      if (mensagem.author.id === client.user?.id) {
+        await mensagem.delete();
+      }
+    } catch {
+    }
+  }
+
   dados[idCanal] = idsNovos;
   await gravar(dados);
 }

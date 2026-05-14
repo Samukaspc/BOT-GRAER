@@ -49,6 +49,14 @@ async function fetchTodosMembros({ servidor }) {
 function formatarVagas({ atual, maximo }) {
     return `${String(atual).padStart(2, "0")}/${String(maximo).padStart(2, "0")}`;
 }
+function ordenarMembrosComTagMaapPrimeiro(a, b) {
+    const aTem = a.roles.cache.has(TAG_CURSO_MAP);
+    const bTem = b.roles.cache.has(TAG_CURSO_MAP);
+    if (aTem !== bTem) {
+        return aTem ? -1 : 1;
+    }
+    return a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" });
+}
 function hasAdminPermission({ membro, idsUsuariosPermitidos }) {
     if (idsUsuariosPermitidos.includes(membro.id)) {
         return true;
@@ -70,12 +78,6 @@ async function buildHierarchyLines({ servidor }) {
             if (!member.roles.cache.has(roleId)) {
                 continue;
             }
-            if (member.roles.cache.has(config_1.ROLES.PRE_GRAER_D) &&
-                (roleId === config_1.ROLES.PILOTO_GRAER ||
-                    roleId === config_1.ROLES.CURSO_BREVE_GRAER ||
-                    roleId === config_1.ROLES.CURSO_ATIRADO_GRAER)) {
-                continue;
-            }
             const list = grouped.get(roleId);
             if (list) {
                 list.push(member);
@@ -87,7 +89,7 @@ async function buildHierarchyLines({ servidor }) {
     lines.push("");
     for (const roleId of [...config_1.HIERARCHY].reverse()) {
         const grupo = grouped.get(roleId) ?? [];
-        grupo.sort((a, b) => a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" }));
+        grupo.sort(ordenarMembrosComTagMaapPrimeiro);
         const maxVagas = config_1.ROLE_LIMITS[roleId] ?? 99;
         const vagas = formatarVagas({ atual: grupo.length, maximo: maxVagas });
         lines.push(`# <@&${roleId}> (${vagas})`);
@@ -99,14 +101,14 @@ async function buildHierarchyLines({ servidor }) {
             for (const membro of grupo) {
                 const semTagCursoMap = !membro.roles.cache.has(TAG_CURSO_MAP);
                 const sufixoTag = semTagCursoMap ? ` ${ICONE_SEM_CURSO_MAP}` : "";
-                lines.push(`<@${membro.id}> | ${membro.displayName}${sufixoTag}`);
+                lines.push(`<@${membro.id}>${sufixoTag}`);
             }
         }
         lines.push("");
         if (roleId === config_1.ROLES.CURSO_ATIRADO_GRAER) {
             const estagiarios = [...members.values()]
                 .filter((m) => !m.user.bot && m.roles.cache.has(config_1.ROLES.ESTAGIARIO))
-                .sort((a, b) => a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" }));
+                .sort(ordenarMembrosComTagMaapPrimeiro);
             const maxEst = config_1.ROLE_LIMITS[config_1.ROLES.ESTAGIARIO] ?? 99;
             const vagasEst = formatarVagas({
                 atual: estagiarios.length,
@@ -121,7 +123,7 @@ async function buildHierarchyLines({ servidor }) {
                 for (const membro of estagiarios) {
                     const semTagCursoMap = !membro.roles.cache.has(TAG_CURSO_MAP);
                     const sufixoTag = semTagCursoMap ? ` ${ICONE_SEM_CURSO_MAP}` : "";
-                    lines.push(`<@${membro.id}> | ${membro.displayName}${sufixoTag}`);
+                    lines.push(`<@${membro.id}>${sufixoTag}`);
                 }
             }
             lines.push("");

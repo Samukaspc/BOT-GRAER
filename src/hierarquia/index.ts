@@ -66,6 +66,15 @@ function formatarVagas({ atual, maximo }: ParametrosFormatarVagas): string {
   return `${String(atual).padStart(2, "0")}/${String(maximo).padStart(2, "0")}`;
 }
 
+function ordenarMembrosComTagMaapPrimeiro(a: GuildMember, b: GuildMember): number {
+  const aTem = a.roles.cache.has(TAG_CURSO_MAP);
+  const bTem = b.roles.cache.has(TAG_CURSO_MAP);
+  if (aTem !== bTem) {
+    return aTem ? -1 : 1;
+  }
+  return a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" });
+}
+
 export function hasAdminPermission({
   membro,
   idsUsuariosPermitidos
@@ -95,14 +104,6 @@ export async function buildHierarchyLines({
       if (!member.roles.cache.has(roleId)) {
         continue;
       }
-      if (
-        member.roles.cache.has(ROLES.PRE_GRAER_D) &&
-        (roleId === ROLES.PILOTO_GRAER ||
-          roleId === ROLES.CURSO_BREVE_GRAER ||
-          roleId === ROLES.CURSO_ATIRADO_GRAER)
-      ) {
-        continue;
-      }
       const list = grouped.get(roleId);
       if (list) {
         list.push(member);
@@ -117,9 +118,7 @@ export async function buildHierarchyLines({
 
   for (const roleId of [...HIERARCHY].reverse()) {
     const grupo = grouped.get(roleId) ?? [];
-    grupo.sort((a, b) =>
-      a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" })
-    );
+    grupo.sort(ordenarMembrosComTagMaapPrimeiro);
 
     const maxVagas = ROLE_LIMITS[roleId] ?? 99;
     const vagas = formatarVagas({ atual: grupo.length, maximo: maxVagas });
@@ -133,7 +132,7 @@ export async function buildHierarchyLines({
       for (const membro of grupo) {
         const semTagCursoMap = !membro.roles.cache.has(TAG_CURSO_MAP);
         const sufixoTag = semTagCursoMap ? ` ${ICONE_SEM_CURSO_MAP}` : "";
-        lines.push(`<@${membro.id}> | ${membro.displayName}${sufixoTag}`);
+        lines.push(`<@${membro.id}>${sufixoTag}`);
       }
     }
 
@@ -142,9 +141,7 @@ export async function buildHierarchyLines({
     if (roleId === ROLES.CURSO_ATIRADO_GRAER) {
       const estagiarios = [...members.values()]
         .filter((m) => !m.user.bot && m.roles.cache.has(ROLES.ESTAGIARIO))
-        .sort((a, b) =>
-          a.displayName.localeCompare(b.displayName, "pt-BR", { sensitivity: "base" })
-        );
+        .sort(ordenarMembrosComTagMaapPrimeiro);
 
       const maxEst = ROLE_LIMITS[ROLES.ESTAGIARIO] ?? 99;
       const vagasEst = formatarVagas({
@@ -161,7 +158,7 @@ export async function buildHierarchyLines({
         for (const membro of estagiarios) {
           const semTagCursoMap = !membro.roles.cache.has(TAG_CURSO_MAP);
           const sufixoTag = semTagCursoMap ? ` ${ICONE_SEM_CURSO_MAP}` : "";
-          lines.push(`<@${membro.id}> | ${membro.displayName}${sufixoTag}`);
+          lines.push(`<@${membro.id}>${sufixoTag}`);
         }
       }
 

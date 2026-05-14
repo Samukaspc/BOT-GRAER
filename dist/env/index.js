@@ -21,10 +21,29 @@ function parseDiscordUserIds({ bruto }) {
     if (!bruto) {
         return [];
     }
-    return bruto
-        .split(",")
+    let s = bruto.trim();
+    if (s.length === 0) {
+        return [];
+    }
+    if (s.startsWith("[") && s.endsWith("]")) {
+        try {
+            const parsed = JSON.parse(s);
+            if (Array.isArray(parsed)) {
+                const ids = parsed
+                    .map((id) => String(id).trim())
+                    .filter((part) => part.length > 0 && /^\d+$/.test(part));
+                if (ids.length > 0) {
+                    return ids;
+                }
+            }
+        }
+        catch { }
+        s = s.slice(1, -1).trim();
+    }
+    return s
+        .split(/[\s,;]+/)
         .map((part) => part.trim())
-        .filter((part) => part.length > 0);
+        .filter((part) => part.length > 0 && /^\d+$/.test(part));
 }
 exports.env = {
     token: getEnvValue({ chave: "DISCORD_TOKEN" }),

@@ -31,7 +31,7 @@ Bot em TypeScript com [discord.js](https://discord.js.org/) que monta e atualiza
    | `CLIENT_ID` | Sim | Application ID da aplicação Discord |
    | `GUILD_ID` | Sim | ID do servidor onde o bot corre |
    | `TEXT_CHANNEL_ID` | Não | Se definido, os comandos só funcionam nesse canal |
-   | `ALLOWED_USER_IDS` | Não | IDs de utilizadores (separados por vírgula) que podem usar os comandos além dos cargos admin configurados no código |
+   | `ALLOWED_USER_IDS` | Não | IDs de utilizadores que podem usar os comandos além dos cargos admin no código. Vários valores: vírgula, ponto e vírgula ou espaços na mesma linha; array JSON (`[id1,id2]`); ou `[` … `]` com IDs separados por espaços ou quebras de linha (valor multilinha no `.env` entre aspas duplas) |
 
 4. Registe os comandos slash no servidor (após alterar comandos ou num setup novo):
 
