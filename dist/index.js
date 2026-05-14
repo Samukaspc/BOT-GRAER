@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const node_http_1 = require("node:http");
 const discord_js_1 = require("discord.js");
 const util_1 = require("@discordjs/util");
 const env_1 = require("./env");
@@ -10,6 +11,16 @@ const logger_1 = require("./logger");
 const client = new discord_js_1.Client({
     intents: [discord_js_1.GatewayIntentBits.Guilds, discord_js_1.GatewayIntentBits.GuildMembers]
 });
+const rawPort = process.env.PORT;
+if (rawPort !== undefined && rawPort.trim().length > 0) {
+    const n = Number.parseInt(rawPort, 10);
+    if (!Number.isNaN(n) && n > 0) {
+        (0, node_http_1.createServer)((_req, res) => {
+            res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+            res.end("ok");
+        }).listen(n, "0.0.0.0");
+    }
+}
 const TEMPO_LIMITE_MS = 360_000;
 function comTempoLimite({ promessa, ms }) {
     return new Promise((resolve, reject) => {

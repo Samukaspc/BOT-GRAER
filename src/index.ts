@@ -1,3 +1,4 @@
+import { createServer } from "node:http";
 import type { GuildTextBasedChannel } from "discord.js";
 import {
   ChannelType,
@@ -34,6 +35,17 @@ import type {
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
 });
+
+const rawPort = process.env.PORT;
+if (rawPort !== undefined && rawPort.trim().length > 0) {
+  const n = Number.parseInt(rawPort, 10);
+  if (!Number.isNaN(n) && n > 0) {
+    createServer((_req, res) => {
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end("ok");
+    }).listen(n, "0.0.0.0");
+  }
+}
 
 const TEMPO_LIMITE_MS = 360_000;
 
