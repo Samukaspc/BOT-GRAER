@@ -6,6 +6,7 @@ const util_1 = require("@discordjs/util");
 const env_1 = require("./env");
 const mensagens_1 = require("./hierarquia/mensagens");
 const config_1 = require("./hierarquia/config");
+const aprovados_1 = require("./hierarquia/aprovados");
 const hierarquia_1 = require("./hierarquia");
 const logger_1 = require("./logger");
 const client = new discord_js_1.Client({
@@ -165,7 +166,10 @@ client.on("interactionCreate", async (interaction) => {
             });
             return;
         }
-        if (env_1.env.textChannelId && interaction.channelId !== env_1.env.textChannelId) {
+        const canalComandoRestrito = env_1.env.textChannelIds.length > 0 &&
+            interaction.commandName !== "aprovados" &&
+            !env_1.env.textChannelIds.includes(interaction.channelId);
+        if (canalComandoRestrito) {
             await interaction.reply({
                 content: "Esse comando so pode ser usado no canal configurado.",
                 flags: discord_js_1.MessageFlags.Ephemeral
@@ -257,6 +261,75 @@ client.on("interactionCreate", async (interaction) => {
             }
             return;
         }
+        if (interaction.commandName === "aprovados") {
+            const okDeferAprovados = await iniciarDeferOuResponderErro({ interaction });
+            if (!okDeferAprovados) {
+                return;
+            }
+            let canalPublicacao;
+            try {
+                const ref = await interaction.guild.channels.fetch(config_1.CANAL_APROVADOS);
+                if (!ref?.isTextBased() || ref.isDMBased()) {
+                    await editarRespostaSegura({
+                        interaction,
+                        conteudo: "Canal de comunicados de aprovados nao encontrado ou invalido."
+                    });
+                    return;
+                }
+                canalPublicacao = ref;
+            }
+            catch (erro) {
+                (0, logger_1.logErro)({
+                    texto: `aprovados canal: ${erro instanceof Error ? erro.stack ?? erro.message : String(erro)}`
+                });
+                await editarRespostaSegura({
+                    interaction,
+                    conteudo: "Nao foi possivel acessar o canal de comunicados de aprovados."
+                });
+                return;
+            }
+            const semPermAprovados = mensagemSeFaltaPermissaoLista({
+                guild: interaction.guild,
+                idCanal: canalPublicacao.id
+            });
+            if (semPermAprovados) {
+                await editarRespostaSegura({ interaction, conteudo: semPermAprovados });
+                return;
+            }
+            const linhasAprovados = (0, aprovados_1.coletarLinhasAprovadosInteracao)(interaction);
+            if (linhasAprovados.length === 0) {
+                await editarRespostaSegura({
+                    interaction,
+                    conteudo: "Informe ao menos um aprovado (aprovado_1)."
+                });
+                return;
+            }
+            const comunicado = (0, aprovados_1.montarComunicadoAprovados)({ linhas: linhasAprovados });
+            if (comunicado.length > 2000) {
+                await editarRespostaSegura({
+                    interaction,
+                    conteudo: "O comunicado ficou longo demais para uma mensagem do Discord (limite 2000 caracteres). Use menos aprovados por vez."
+                });
+                return;
+            }
+            try {
+                await canalPublicacao.send({ content: comunicado });
+                await editarRespostaSegura({
+                    interaction,
+                    conteudo: `Comunicado oficial publicado em <#${config_1.CANAL_APROVADOS}>.`
+                });
+            }
+            catch (erro) {
+                (0, logger_1.logErro)({
+                    texto: `aprovados: ${erro instanceof Error ? erro.stack ?? erro.message : String(erro)}`
+                });
+                await editarRespostaSegura({
+                    interaction,
+                    conteudo: `Erro ao publicar comunicado: ${mensagemErroParaUsuario({ erro })}`
+                });
+            }
+            return;
+        }
         if (interaction.commandName === "parar") {
             const canal = interaction.channel;
             if (!canal?.isTextBased() || canal.isDMBased()) {
@@ -329,8 +402,10 @@ client.once(discord_js_1.Events.ClientReady, (readyClient) => {
     (0, logger_1.logTitulo)({ texto: "Bot Hierarquia · Discord" });
     (0, logger_1.logOk)({ texto: `Conectado como ${readyClient.user.tag}` });
     (0, logger_1.logInfo)({ texto: `Servidor configurado: ${env_1.env.guildId}` });
-    if (env_1.env.textChannelId) {
-        (0, logger_1.logInfo)({ texto: `Canal fixo de comandos ativo: ${env_1.env.textChannelId}` });
+    if (env_1.env.textChannelIds.length > 0) {
+        (0, logger_1.logInfo)({
+            texto: `Canais de comandos (/atualizar, /parar): ${env_1.env.textChannelIds.join(", ")}`
+        });
     }
     (0, logger_1.logRodape)({ texto: "Use /atualizar no Discord ou Ctrl+C aqui para encerrar." });
     console.log("");

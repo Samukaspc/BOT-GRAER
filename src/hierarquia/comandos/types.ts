@@ -1,1 +1,1 @@
-export type NomeComandoHierarquia = "atualizar" | "parar";
+export type NomeComandoHierarquia = "atualizar" | "parar" | "aprovados";

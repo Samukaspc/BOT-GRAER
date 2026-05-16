@@ -17,7 +17,11 @@ import {
   limparRegistroCanal,
   publicarOuEditarLista
 } from "./hierarquia/mensagens";
-import { HIERARCHY_HEADER } from "./hierarquia/config";
+import { CANAL_APROVADOS, HIERARCHY_HEADER } from "./hierarquia/config";
+import {
+  coletarLinhasAprovadosInteracao,
+  montarComunicadoAprovados
+} from "./hierarquia/aprovados";
 import { buildHierarchyLines, hasAdminPermission } from "./hierarquia";
 import { logErro, logInfo, logOk, logRodape, logTitulo } from "./logger";
 import type {
@@ -217,7 +221,11 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    if (env.textChannelId && interaction.channelId !== env.textChannelId) {
+    const canalComandoRestrito =
+      env.textChannelIds.length > 0 &&
+      interaction.commandName !== "aprovados" &&
+      !env.textChannelIds.includes(interaction.channelId);
+    if (canalComandoRestrito) {
       await interaction.reply({
         content: "Esse comando so pode ser usado no canal configurado.",
         flags: MessageFlags.Ephemeral
@@ -322,6 +330,80 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
+    if (interaction.commandName === "aprovados") {
+      const okDeferAprovados = await iniciarDeferOuResponderErro({ interaction });
+      if (!okDeferAprovados) {
+        return;
+      }
+
+      let canalPublicacao: GuildTextBasedChannel;
+      try {
+        const ref = await interaction.guild.channels.fetch(CANAL_APROVADOS);
+        if (!ref?.isTextBased() || ref.isDMBased()) {
+          await editarRespostaSegura({
+            interaction,
+            conteudo: "Canal de comunicados de aprovados nao encontrado ou invalido."
+          });
+          return;
+        }
+        canalPublicacao = ref as GuildTextBasedChannel;
+      } catch (erro: unknown) {
+        logErro({
+          texto: `aprovados canal: ${erro instanceof Error ? erro.stack ?? erro.message : String(erro)}`
+        });
+        await editarRespostaSegura({
+          interaction,
+          conteudo: "Nao foi possivel acessar o canal de comunicados de aprovados."
+        });
+        return;
+      }
+
+      const semPermAprovados = mensagemSeFaltaPermissaoLista({
+        guild: interaction.guild,
+        idCanal: canalPublicacao.id
+      });
+      if (semPermAprovados) {
+        await editarRespostaSegura({ interaction, conteudo: semPermAprovados });
+        return;
+      }
+
+      const linhasAprovados = coletarLinhasAprovadosInteracao(interaction);
+      if (linhasAprovados.length === 0) {
+        await editarRespostaSegura({
+          interaction,
+          conteudo: "Informe ao menos um aprovado (aprovado_1)."
+        });
+        return;
+      }
+      const comunicado = montarComunicadoAprovados({ linhas: linhasAprovados });
+
+      if (comunicado.length > 2000) {
+        await editarRespostaSegura({
+          interaction,
+          conteudo:
+            "O comunicado ficou longo demais para uma mensagem do Discord (limite 2000 caracteres). Use menos aprovados por vez."
+        });
+        return;
+      }
+
+      try {
+        await canalPublicacao.send({ content: comunicado });
+        await editarRespostaSegura({
+          interaction,
+          conteudo: `Comunicado oficial publicado em <#${CANAL_APROVADOS}>.`
+        });
+      } catch (erro: unknown) {
+        logErro({
+          texto: `aprovados: ${erro instanceof Error ? erro.stack ?? erro.message : String(erro)}`
+        });
+        await editarRespostaSegura({
+          interaction,
+          conteudo: `Erro ao publicar comunicado: ${mensagemErroParaUsuario({ erro })}`
+        });
+      }
+      return;
+    }
+
     if (interaction.commandName === "parar") {
       const canal = interaction.channel;
       if (!canal?.isTextBased() || canal.isDMBased()) {
@@ -394,8 +476,10 @@ client.once(Events.ClientReady, (readyClient) => {
   logTitulo({ texto: "Bot Hierarquia · Discord" });
   logOk({ texto: `Conectado como ${readyClient.user.tag}` });
   logInfo({ texto: `Servidor configurado: ${env.guildId}` });
-  if (env.textChannelId) {
-    logInfo({ texto: `Canal fixo de comandos ativo: ${env.textChannelId}` });
+  if (env.textChannelIds.length > 0) {
+    logInfo({
+      texto: `Canais de comandos (/atualizar, /parar): ${env.textChannelIds.join(", ")}`
+    });
   }
   logRodape({ texto: "Use /atualizar no Discord ou Ctrl+C aqui para encerrar." });
   console.log("");

@@ -16,6 +16,6 @@ export type ConfigAmbiente = {
   token: string;
   clientId: string;
   guildId: string;
-  textChannelId: string | null;
+  textChannelIds: readonly string[];
   allowedUserIds: readonly string[];
 };

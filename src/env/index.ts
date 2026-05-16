@@ -56,7 +56,9 @@ export const env = {
   token: getEnvValue({ chave: "DISCORD_TOKEN" }),
   clientId: getEnvValue({ chave: "CLIENT_ID" }),
   guildId: getEnvValue({ chave: "GUILD_ID" }),
-  textChannelId: getOptionalEnvValue({ nome: "TEXT_CHANNEL_ID" }),
+  textChannelIds: parseDiscordUserIds({
+    bruto: getOptionalEnvValue({ nome: "TEXT_CHANNEL_ID" })
+  }),
   allowedUserIds: parseDiscordUserIds({
     bruto: getOptionalEnvValue({ nome: "ALLOWED_USER_IDS" })
   })
